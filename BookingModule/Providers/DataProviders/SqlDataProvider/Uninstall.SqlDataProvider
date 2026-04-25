@@ -1,3 +1,7 @@
 ﻿IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'{databaseOwner}[{objectQualifier}BookingModule_Items]') AND type in (N'U'))
 DROP TABLE {databaseOwner}[{objectQualifier}BookingModule_Items]
 GO
+
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'{databaseOwner}[{objectQualifier}BookingModule_Bookings]') AND type in (N'U'))
+DROP TABLE {databaseOwner}[{objectQualifier}BookingModule_Bookings]
+GO
