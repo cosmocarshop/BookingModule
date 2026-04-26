@@ -1,0 +1,244 @@
+@inherits DotNetNuke.Web.Mvc.Framework.DnnWebViewPage<Dnn.BookingModule.BookingModule.Models.BookingWizard>
+
+@using System.Collections.Generic
+@using System.Web.Mvc
+@using System.Web.Mvc.Html
+@using DotNetNuke.Web.Mvc.Helpers
+@using System.Linq
+@using System
+
+<link rel="stylesheet" type="text/css" href="~/DesktopModules/BookingModule/BookingModule/module.css?v=@DateTime.Now.Ticks" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<div id="booking-container">
+    @if (Model.CurrentStep < 4)
+    {
+        <div class="step-indicator">
+            <span class="@(Model.CurrentStep == 1 ? "active" : "")">1. Szolgáltatások</span> >
+            <span class="@(Model.CurrentStep == 2 ? "active" : "")">2. Időpont</span> >
+            <span class="@(Model.CurrentStep == 3 ? "active" : "")">3. Adatok</span>
+        </div>
+    }
+
+    <form method="post" action="@Request.RawUrl" class="dnnForm" id="bookingForm">
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="dnnFormMessage dnnFormError">
+                @ViewBag.ErrorMessage
+            </div>
+        }
+
+        @Html.HiddenFor(m => m.CurrentStep)
+        @Html.AntiForgeryToken()
+
+        @if (Model.CurrentStep > 1 && Model.CurrentStep < 4 && Model.SelectedServiceBvins != null)
+        {
+            foreach (var p in Model.SelectedServiceBvins)
+            {
+                <input type="hidden" name="SelectedServiceBvins" value="@p" />
+            }
+        }
+        
+        @if (Model.CurrentStep != 2 && Model.CurrentStep < 4)
+        {
+            @Html.HiddenFor(m => m.SelectedDate)
+            @Html.HiddenFor(m => m.SelectedTime)
+        }
+
+        @if (Model.CurrentStep == 1)
+        {
+            <h1>Válasszon szolgáltatásokat</h1>
+            <p>Kérem válassza ki az önnek legjobban megfelelő szolgáltatásokat</p>
+            <div class="service-container">
+                @foreach (var service in Model.AvailableServices)
+                {
+                    <div class="service-item">
+                        <input type="checkbox"
+                               name="SelectedServiceBvins" 
+                               value="@service.Bvin"
+                               id="chk_@service.Bvin"
+                               @(Model.SelectedServiceBvins.Contains(service.Bvin) ? "checked" : "") />
+
+                        <label for="chk_@service.Bvin" class="service-pill">
+                            <div class="service-info">
+                                <span class="service-name">@service.ProductName</span>
+                                <span class="service-details">@service.MetaDescription</span>
+                            </div>
+                            <span class="service-price">@((int)service.SitePrice) Ft</span>
+                        </label>
+                    </div>
+                }
+            </div>
+        }
+        else if (Model.CurrentStep == 2)
+        {
+            <h1>Időpont foglalás</h1>
+            <p>Kérem válasszon napot és időpontot</p>
+            
+            <div class="datetime-container">
+                <div class="calendar-wrapper">
+                    @Html.TextBoxFor(m => m.SelectedDate, "{0:yyyy-MM-dd}", new { id = "flatpickr", type = "hidden" })
+                    <div id="flatpickr-inline"></div>
+                </div>
+                
+                @if (Model.SelectedDate.HasValue)
+                {
+                    <div class="time-slots-wrapper">
+                        <h3>Válasszon időpontot: @Model.SelectedDate.Value.ToString("yyyy. MM. dd.")</h3>
+                        <div class="timeslot-container">
+                            @foreach (var time in Model.AvailableTimeSlots)
+                            {
+                                <div class="timeslot-item">
+                                    <input type="radio" 
+                                           name="SelectedTime" 
+                                           value="@time.ToString("hh\\:mm")" 
+                                           id="time_@time.ToString("hhmm")"
+                                           @(Model.SelectedTime.HasValue && Model.SelectedTime.Value == time ? "checked" : "") />
+                                           
+                                    <label for="time_@time.ToString("hhmm")" class="timeslot-pill">
+                                        @time.ToString("hh\\:mm")
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (Model.CurrentStep == 3)
+        {
+            <h1>Adatok megadása</h1>
+            <p>Kérjük, adja meg elérhetőségeit a foglalás véglegesítéséhez.</p>
+            
+            <div class="dnnFormItem">
+                <label>Név *</label>
+                @Html.TextBoxFor(m => m.Name, new { @class = "dnnFormInput", required = "required" })
+            </div>
+            
+            <div class="dnnFormItem">
+                <label>E-mail *</label>
+                @Html.TextBoxFor(m => m.Email, new { @class = "dnnFormInput", type = "email", required = "required" })
+            </div>
+            
+            <div class="dnnFormItem">
+                <label>Telefonszám *</label>
+                @Html.TextBoxFor(m => m.PhoneNr, new { @class = "dnnFormInput", required = "required" })
+            </div>
+            
+            <div class="dnnFormItem">
+                <label>Megjegyzés</label>
+                @Html.TextAreaFor(m => m.Comment, new { @class = "dnnFormInput", rows = "4" })
+            </div>
+        }
+        else if (Model.CurrentStep == 4)
+        {
+            <div class="thank-you-container">
+                <h1>Köszönjük a foglalást!</h1>
+                <p>A foglalása sikeresen rögzítésre került a következő adatokkal:</p>
+                <div class="summary-box">
+                    <p><strong>Szolgáltatások: </strong></p>
+                    <ul>
+                        @if (Model.SelectedServiceBvins != null && Model.AvailableServices != null)
+                        {
+                            foreach (var bvin in Model.SelectedServiceBvins)
+                            {
+                                var service = Model.AvailableServices.FirstOrDefault(s => s.Bvin == bvin);
+                                if (service != null)
+                                {
+                                    <li>@service.ProductName (@((int)service.SitePrice) Ft)</li>
+                                }
+                            }
+                        }
+                    </ul>
+                    <p><strong>Dátum és idő: </strong>@Model.SelectedDate.Value.ToString("yyyy. MM. dd.") - @Model.SelectedTime.Value.ToString("hh\\:mm")</p>
+                    <p><strong>Név: </strong>@Model.Name</p>
+                    <p><strong>E-mail: </strong>@Model.Email</p>
+                    <p><strong>Telefon: </strong>@Model.PhoneNr</p>
+                    <p><strong>Megjegyzés: </strong>@(string.IsNullOrEmpty(Model.Comment) ? "-" : Model.Comment)</p>
+                </div>
+            </div>
+        }
+
+        <div class="form-actions">
+            @if (Model.CurrentStep > 1 && Model.CurrentStep < 4)
+            {
+                <button type="submit" name="action" value="prev" formnovalidate class="btn btn-secondary">Vissza</button>
+            }
+            
+            @if (Model.CurrentStep < 3)
+            {
+                <button type="submit" name="action" value="next" class="btn btn-primary" id="btnNext"
+                        @(Model.CurrentStep == 1 && (Model.SelectedServiceBvins == null || !Model.SelectedServiceBvins.Any()) ? "disabled" : "")
+                        @(Model.CurrentStep == 2 && (!Model.SelectedDate.HasValue || !Model.SelectedTime.HasValue) ? "disabled" : "")>
+                    Tovább
+                </button>
+            }
+            else if (Model.CurrentStep == 3)
+            {
+                <button type="submit" name="action" value="finish" class="btn btn-success">Foglalás véglegesítése</button>
+            }
+            else if (Model.CurrentStep == 4)
+            {
+                <button type="submit" name="action" value="home" class="btn btn-primary">Vissza a főoldalra</button>
+            }
+            
+            <button type="submit" name="action" value="update_date" id="btnUpdateDate" style="display:none;">Update Date</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var btnNext = document.getElementById("btnNext");
+
+        // Step 1: Validation
+        var serviceCheckboxes = document.querySelectorAll('input[name="SelectedServiceBvins"]');
+        if (serviceCheckboxes.length > 0 && btnNext) {
+            function validateServices() {
+                var isChecked = Array.from(serviceCheckboxes).some(cb => cb.checked);
+                btnNext.disabled = !isChecked;
+            }
+
+            serviceCheckboxes.forEach(function(cb) {
+                cb.addEventListener('change', validateServices);
+            });
+        }
+
+        // Step 2: Validation (Time Selection)
+        var timeRadios = document.querySelectorAll('input[name="SelectedTime"]');
+        if (document.getElementById("flatpickr") && timeRadios.length > 0 && btnNext) {
+            function validateTime() {
+                var isChecked = Array.from(timeRadios).some(radio => radio.checked);
+                btnNext.disabled = !isChecked;
+            }
+
+            timeRadios.forEach(function(radio) {
+                radio.addEventListener('change', validateTime);
+            });
+        }
+
+        if (document.getElementById("flatpickr")) {
+            var selectedDateInput = document.getElementById("flatpickr").value;
+            var defaultDate = selectedDateInput ? selectedDateInput : "today";
+
+            flatpickr("#flatpickr-inline", {
+                inline: true,
+                defaultDate: defaultDate,
+                minDate: "today",
+                onChange: function(selectedDates, dateStr, instance) {
+                    document.getElementById("flatpickr").value = dateStr;
+                    document.getElementById("btnUpdateDate").click();
+                }
+            });
+        }
+    });
+    // Step 3: Form submission styling for validation
+    var bookingForm = document.getElementById("bookingForm");
+    if (bookingForm) {
+        bookingForm.addEventListener("submit", function(event) {
+            // When submit is pressed, add the invalid form feedback class
+            bookingForm.classList.add('was-submitted');
+        }, false);
+    }
+</script>

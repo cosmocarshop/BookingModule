@@ -1,0 +1,258 @@
+#booking-container {
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: inherit;
+}
+
+#booking-container h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+#booking-container p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.service-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 15px;
+}
+
+.service-item {
+    position: relative;
+}
+
+.service-item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.service-pill {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.service-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.service-pill:hover {
+    background-color: #f1f1f1;
+    border-color: #ccc;
+}
+
+.service-item input[type="checkbox"]:checked + .service-pill {
+    border-color: #007bff;
+    background-color: #e7f1ff;
+}
+
+.service-name {
+    font-weight: bold;
+    font-size: 18px;
+    color: #333;
+}
+
+.service-details {
+    font-size: 14px;
+    color: #777;
+    margin-top: 5px;
+}
+
+.service-price {
+    font-weight: bold;
+    font-size: 16px;
+    color: #28a745;
+    flex: 0 0 auto;
+}
+
+.datetime-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.calendar-wrapper {
+    flex: 0 0 auto;
+}
+
+.time-slots-wrapper {
+    flex: 1;
+}
+
+.timeslot-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.timeslot-item {
+    position: relative;
+}
+
+.timeslot-item input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.timeslot-pill {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.timeslot-pill:hover {
+    background-color: #f1f1f1;
+    border-color: #ccc;
+}
+
+.timeslot-item input[type="radio"]:checked + .timeslot-pill {
+    border-color: #007bff;
+    background-color: #e7f1ff;
+    color: #007bff;
+}
+
+.dnnFormItem {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dnnFormItem label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.dnnFormInput {
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    font-family: inherit;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.dnnFormInput:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Base style without validation UI */
+.dnnFormInput {
+    border: 1px solid #ccc;
+}
+
+/* Validation styles only apply after user interacts via :placeholder-shown trick, or classes added later, but browsers use :invalid when submitting.
+   A simple approach mapping to modern pseudo classes:
+*/
+form.was-submitted .dnnFormInput:invalid {
+    border-color: #dc3545;
+}
+
+form.was-submitted .dnnFormInput:valid {
+    border-color: #28a745;
+}
+
+textarea.dnnFormInput {
+    resize: vertical;
+}
+
+.thank-you-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.thank-you-container h1 {
+    color: #28a745;
+}
+
+.summary-box {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.summary-box p {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.step-indicator {
+    padding: 10px 0;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #888;
+}
+
+.step-indicator span {
+    margin: 0 5px;
+}
+
+.step-indicator .active {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+.btn-primary {
+    background-color: #007bff;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}

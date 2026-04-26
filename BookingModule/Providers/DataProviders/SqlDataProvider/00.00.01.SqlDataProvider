@@ -16,19 +16,15 @@ CREATE TABLE {databaseOwner}{objectQualifier}BookingModule_Bookings
     (
     BookingId int NOT NULL IDENTITY (1, 1),
     ModuleId int NOT NULL,
-    ProductBvin nvarchar(40) NOT NULL,
-    UserId int NOT NULL,
-    OrderBvin nvarchar(40) NOT NULL,
-    OrderItemBvin nvarchar(40) NOT NULL,
-    StartDateTimeUtc datetime NOT NULL,
-    EndDateTimeUtc datetime NOT NULL,
+    Start datetime NOT NULL,
+    [End] datetime NOT NULL,
+    Name nvarchar(200) NOT NULL,
+    Email nvarchar(200) NOT NULL,
+    PhoneNr nvarchar(50) NOT NULL,
+    Comment nvarchar(1000) NULL,
     Status int NOT NULL,
-    ExtendedData nvarchar(max) NULL,
-
-    CreatedOnDate datetime NOT NULL DEFAULT GETUTCDATE(),
-    LastUpdatedDate datetime NOT NULL DEFAULT GETUTCDATE()
+    SerializedProductBvins nvarchar(max) NOT NULL
     )  ON [PRIMARY]
-     TEXTIMAGE_ON [PRIMARY]
 GO
 
 

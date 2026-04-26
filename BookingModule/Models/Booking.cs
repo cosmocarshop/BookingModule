@@ -12,6 +12,7 @@
 
 using DotNetNuke.ComponentModel.DataAnnotations;
 using System;
+using System.Collections.Generic;
 using System.Web.Caching;
 
 namespace Dnn.BookingModule.BookingModule.Models
@@ -27,15 +28,36 @@ namespace Dnn.BookingModule.BookingModule.Models
     {
         public int BookingId { get; set; }
         public int ModuleId { get; set; }
-        public string ProductBvin { get; set; }
-        public int UserId { get; set; }
-        public string OrderBvin { get; set; }
-        public string OrderItemBvin { get; set; }
-        public DateTime StartDateTimeUtc { get; set; }
-        public DateTime EndDateTimeUtc { get; set; }
+        public DateTime Start { get; set; }
+        public DateTime End { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string PhoneNr { get; set; }
+        public string Comment { get; set; }
         public int Status { get; set; }
-        public string ExtendedData { get; set; }
-        public DateTime CreatedOnDate { get; set; }
-        public DateTime LastUpdatedDate { get; set; }
+
+        [IgnoreColumn]
+        public List<string> ProductBvins { get; set; } = new List<string>();
+
+        // This property stores the list as a comma-separated string in the database
+        public string SerializedProductBvins
+        {
+            get
+            {
+                if (ProductBvins == null || ProductBvins.Count == 0) return string.Empty;
+                return string.Join(",", ProductBvins);
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    ProductBvins = new List<string>();
+                }
+                else
+                {
+                    ProductBvins = new List<string>(value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
+                }
+            }
+        }
     }
 }
