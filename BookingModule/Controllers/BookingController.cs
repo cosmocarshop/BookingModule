@@ -46,16 +46,12 @@ namespace Dnn.BookingModule.BookingModule.Controllers
 
             if (wizard.CurrentStep == 2 && wizard.SelectedDate.HasValue)
             {
-                // Load time slots based on the selected date. Currently fixed 9:00 to 18:00 hourly times
-                wizard.AvailableTimeSlots = new List<TimeSpan>();
-                for (int hour = 9; hour < 18; hour++)
-                {
-                    wizard.AvailableTimeSlots.Add(new TimeSpan(hour, 0, 0));
-                }
+                wizard.AllTimeSlots = BookingManager.Instance.GetTimeSlots(null);
+                wizard.AvailableTimeSlots = BookingManager.Instance.GetTimeSlots(wizard.SelectedDate.Value);
             }
             else
             {
-                wizard.AvailableTimeSlots = new List<TimeSpan>();
+                wizard.AllTimeSlots = new List<TimeSpan>();
             }
 
             if (action == "next")
@@ -63,12 +59,22 @@ namespace Dnn.BookingModule.BookingModule.Controllers
                 wizard.CurrentStep++;
 
                 // Refresh times for step 2 if we navigate here or stay in it
-                if (wizard.CurrentStep == 2 && wizard.SelectedDate.HasValue)
+                if (wizard.CurrentStep == 2)
                 {
-                    wizard.AvailableTimeSlots.Clear();
-                    for (int hour = 9; hour < 18; hour++)
+                    if (!wizard.SelectedDate.HasValue)
                     {
-                        wizard.AvailableTimeSlots.Add(new TimeSpan(hour, 0, 0));
+                        wizard.SelectedDate = DateTime.Today;
+                    }
+
+                    wizard.AllTimeSlots = BookingManager.Instance.GetTimeSlots(null);
+                    wizard.AvailableTimeSlots = BookingManager.Instance.GetTimeSlots(wizard.SelectedDate.Value);
+
+                    // If today has no available slots, automatically push them to tomorrow
+                    if (wizard.SelectedDate.Value.Date == DateTime.Today && !wizard.AvailableTimeSlots.Any())
+                    {
+                        wizard.SelectedDate = DateTime.Today.AddDays(1);
+                        wizard.AvailableTimeSlots = BookingManager.Instance.GetTimeSlots(wizard.SelectedDate.Value);
+                        ViewBag.TodayIsFull = true;
                     }
                 }
             }
@@ -77,7 +83,31 @@ namespace Dnn.BookingModule.BookingModule.Controllers
                 wizard.CurrentStep--;
             } else if (action == "update_date")
             {
-                // Just refreshing view (like for Ajax) - will hit the above logic to fill time slots
+                // Just refreshing view (like for Ajax) - will hit the logic above to fill time slots
+
+                // Keep the TodayIsFull flag if today has indeed passed/filled up, 
+                // so calendar scripts don't suddenly re-enable today after navigating dates
+                if (wizard.CurrentStep == 2)
+                {
+                    wizard.SelectedTime = null; // Always clear when clicking around the calendar to prevent illegal selections on restricted days.
+
+                    var todaySlots = BookingManager.Instance.GetTimeSlots(DateTime.Today);
+                    if (!todaySlots.Any())
+                    {
+                        ViewBag.TodayIsFull = true;
+
+                        // Failsafe in case they manipulate the payload or calendar bugs out
+                        if (wizard.SelectedDate.HasValue && wizard.SelectedDate.Value.Date == DateTime.Today)
+                        {
+                            wizard.SelectedDate = DateTime.Today.AddDays(1);
+                        }
+                    }
+                    if (wizard.SelectedDate.HasValue)
+                    {
+                        wizard.AllTimeSlots = BookingManager.Instance.GetTimeSlots(null);
+                        wizard.AvailableTimeSlots = BookingManager.Instance.GetTimeSlots(wizard.SelectedDate.Value);
+                    }
+                }
             } else if (action == "finish")
             {
                 // Server-side validation before finalizing booking
@@ -94,6 +124,30 @@ namespace Dnn.BookingModule.BookingModule.Controllers
                 }
 
                 // To do: Save booking to DB here
+
+                var startDate = wizard.SelectedDate.Value.Date + wizard.SelectedTime.Value;
+                var endDate = wizard.SelectedDate.Value.Date + wizard.SelectedTime.Value.Add(new TimeSpan(1, 0, 0)); // Assuming 1 hour duration; add duration customization logic later
+
+                // Security check to guarantee slot wasn't snatched by another session concurrently 
+                if (!BookingManager.Instance.IsTimeSlotAvailable(startDate, endDate))
+                {
+                    wizard.CurrentStep = 1;
+                    ViewBag.ErrorMessage = "Sajnáljuk, időközben ez az időpont már lefoglalásra került. Kérem, válasszon egy másik időpontot.";
+                    ModelState.Clear();
+                    return View(wizard);
+                }
+
+                BookingManager.Instance.CreateBooking(new Booking
+                {
+                    Start = startDate,
+                    End = endDate,
+                    Name = wizard.Name,
+                    Email = wizard.Email,
+                    PhoneNr = wizard.PhoneNr,
+                    Comment = wizard.Comment,
+                    ProductBvins = wizard.SelectedServiceBvins,
+                });
+
                 wizard.CurrentStep = 4;
             } else if (action == "home")
             {

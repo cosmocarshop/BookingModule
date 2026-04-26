@@ -16,8 +16,10 @@ namespace Dnn.BookingModule.BookingModule.Models
         
         public TimeSpan? SelectedTime { get; set; }
         
+        public List<TimeSpan> AllTimeSlots { get; set; } = new List<TimeSpan>();
+
         public List<TimeSpan> AvailableTimeSlots { get; set; } = new List<TimeSpan>();
-        
+
         public string Name { get; set; }
         public string Email { get; set; }
         public string PhoneNr { get; set; }

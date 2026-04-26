@@ -15,6 +15,7 @@ using DotNetNuke.Data;
 using DotNetNuke.Framework;
 using Hotcakes.Commerce;
 using Hotcakes.Commerce.Catalog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -23,12 +24,14 @@ namespace Dnn.BookingModule.BookingModule.Components
     internal interface IBookingManager
     {
         List<Product> GetAvailableServices();
+        List<TimeSpan> GetTimeSlots(DateTime? forDay);
         void CreateBooking(Booking b);
         void DeleteBooking(int bookingId, int moduleId);
         void DeleteBooking(Booking b);
         IEnumerable<Booking> GetBookings(int moduleId);
         Booking GetBooking(int bookingId, int moduleId);
         void UpdateBooking(Booking b);
+        bool IsTimeSlotAvailable(DateTime targetStart, DateTime targetEnd);
     }
 
     internal class BookingManager : ServiceLocator<IBookingManager, BookingManager>, IBookingManager
@@ -49,6 +52,46 @@ namespace Dnn.BookingModule.BookingModule.Components
             var products = app.CatalogServices.Products.FindAllPaged(1, int.MaxValue).FindAll(p => p.ProductTypeId == ptId);
 
             return products;
+        }
+
+        // Returns all time slots for a given day if forDay is null, otherwise checks for availability and returns only available time slots
+        public List<TimeSpan> GetTimeSlots(DateTime? forDay)
+        {
+            var timeSlots = new List<TimeSpan>();
+
+            var startTime = new TimeSpan(9, 0, 0); // 9:00 AM
+            var endTime = new TimeSpan(17, 0, 0); // 5:00 PM
+
+            var interval = new TimeSpan(1, 0, 0); // 1 hour interval
+            var now = DateTime.Now;
+
+            for (var time = startTime; time < endTime; time += interval)
+            {
+                if (forDay.HasValue)
+                {
+                    var targetStart = forDay.Value.Date + time;
+                    var targetEnd = targetStart + interval;
+
+                    // Skip time slots that have already passed in real time
+                    if (targetStart <= now)
+                    {
+                        continue;
+                    }
+
+                    if (!IsTimeSlotAvailable(targetStart, targetEnd))
+                    {
+                        continue; // Skip this time slot as it is booked
+                    }
+                }
+                else
+                {
+                    // If we just want ALL valid slots for the calendar, we still might not want to return past slots for "today" 
+                    // But to keep 'AllTimeSlots' intact, we only filter past slots if 'forDay' is provided.
+                }
+
+                timeSlots.Add(time);
+            }
+            return timeSlots;
         }
 
         public void CreateBooking(Booking b)
@@ -103,6 +146,26 @@ namespace Dnn.BookingModule.BookingModule.Components
             {
                 var rep = ctx.GetRepository<Booking>();
                 rep.Update(b);
+            }
+        }
+
+        public bool IsTimeSlotAvailable(DateTime targetStart, DateTime targetEnd)
+        {
+            using (IDataContext ctx = DataContext.Instance())
+            {
+                // We only need to check bookings that overlap with our target interval.
+                // An overlap occurs if the booking starts before the target ends AND the booking ends after the target starts.
+                // We format the exact query manually to ensure performance.
+
+                var sql = @"
+                    SELECT TOP 1 1 
+                    FROM {objectQualifier}BookingModule_Bookings 
+                    WHERE [Start] < @1 AND [End] > @0";
+
+                var overlaps = ctx.ExecuteQuery<int>(System.Data.CommandType.Text, sql, targetStart, targetEnd);
+
+                // If the query returns any row, it means the slot overlaps (is NOT available).
+                return !overlaps.Any();
             }
         }
 

@@ -87,16 +87,19 @@
                     <div class="time-slots-wrapper">
                         <h3>Válasszon időpontot: @Model.SelectedDate.Value.ToString("yyyy. MM. dd.")</h3>
                         <div class="timeslot-container">
-                            @foreach (var time in Model.AvailableTimeSlots)
+                            @foreach (var time in Model.AllTimeSlots)
                             {
+                                bool isAvailable = Model.AvailableTimeSlots.Contains(time);
+
                                 <div class="timeslot-item">
                                     <input type="radio" 
                                            name="SelectedTime" 
                                            value="@time.ToString("hh\\:mm")" 
                                            id="time_@time.ToString("hhmm")"
-                                           @(Model.SelectedTime.HasValue && Model.SelectedTime.Value == time ? "checked" : "") />
-                                           
-                                    <label for="time_@time.ToString("hhmm")" class="timeslot-pill">
+                                           @(Model.SelectedTime.HasValue && Model.SelectedTime.Value == time ? "checked" : "")
+                                           @(isAvailable ? "" : "disabled") />
+
+                                    <label for="time_@time.ToString("hhmm")" class="timeslot-pill @(isAvailable ? "" : "timeslot-disabled")">
                                         @time.ToString("hh\\:mm")
                                     </label>
                                 </div>
@@ -222,10 +225,30 @@
             var selectedDateInput = document.getElementById("flatpickr").value;
             var defaultDate = selectedDateInput ? selectedDateInput : "today";
 
+            // If the controller pushed us to tomorrow because today is full, we must disable today
+            // We can determine this by checking if the server set a date that is strictly greater than today,
+            // while we initially would have defaulted to today.
+            // But a simpler approach is injecting a minDate from server if we want strict blocking, or just using "today"
+            // For now, if defaultDate is tomorrow due to auto-push, "today" in flatpickr still allows today to be clicked unless we disable it.
+            // Let's rely on standard logic but keep "today" minDate.
+
+            var isTodayFull = @((ViewBag.TodayIsFull != null && (bool)ViewBag.TodayIsFull).ToString().ToLower());
+
             flatpickr("#flatpickr-inline", {
                 inline: true,
                 defaultDate: defaultDate,
                 minDate: "today",
+                disable: [
+                    function(date) {
+                        if (isTodayFull) {
+                            var today = new Date();
+                            return date.getDate() === today.getDate() && 
+                                   date.getMonth() === today.getMonth() && 
+                                   date.getFullYear() === today.getFullYear();
+                        }
+                        return false; 
+                    }
+                ],
                 onChange: function(selectedDates, dateStr, instance) {
                     document.getElementById("flatpickr").value = dateStr;
                     document.getElementById("btnUpdateDate").click();
