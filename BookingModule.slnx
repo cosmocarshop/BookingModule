@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="BookingModule/BookingModule.csproj" />
+  <Project Path="BookingModule/BookingModule.csproj" Id="4130d773-4930-4c21-9bcf-0c5244f585d0" />
+  <Project Path="UnitTestExample.Test/UnitTestExample.Test.csproj" Id="1cd138f5-e20b-45ae-8dee-8d8a8d5f5f94" />
 </Solution>
