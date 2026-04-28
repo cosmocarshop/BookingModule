@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
@@ -32,3 +33,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 [assembly: AssemblyVersion("00.00.01.*")]
 [assembly: AssemblyFileVersion("00.00.01.*")]
+
+[assembly: InternalsVisibleTo("UnitTestExample.Test")] // Ez kell, ahhoz, hogy tesztelni tudjunk
