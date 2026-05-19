@@ -1,6 +1,6 @@
 <dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="BookingModule" type="Module" version="00.00.01">
+    <package name="BookingModule" type="Module" version="00.00.02">
       <friendlyName>BookingModule</friendlyName>
       <description>BookingModule</description>
       <iconFile>~/Icons/Sigma/Software_32X32_Standard.png</iconFile>
