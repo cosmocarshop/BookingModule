@@ -137,7 +137,7 @@ namespace Dnn.BookingModule.BookingModule.Controllers
                     return View(wizard);
                 }
 
-                BookingManager.Instance.CreateBooking(new Booking
+                var booking = new Booking
                 {
                     Start = startDate,
                     End = endDate,
@@ -146,7 +146,17 @@ namespace Dnn.BookingModule.BookingModule.Controllers
                     PhoneNr = wizard.PhoneNr,
                     Comment = wizard.Comment,
                     ProductBvins = wizard.SelectedServiceBvins,
-                });
+                };
+
+                BookingManager.Instance.CreateBooking(booking);
+
+                // Send email using brevo
+                var brevoResult = BrevoManager.Instance.SendBookingEvent(booking);
+
+                if (brevoResult != null && !brevoResult.success)
+                {
+                    ViewBag.ErrorMessage = brevoResult.message;
+                }
 
                 wizard.CurrentStep = 4;
             } else if (action == "home")

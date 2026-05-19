@@ -44,3 +44,5 @@ Install/
 *.source.zip
 *.Resources.zip
 packages/
+
+Api.config
