@@ -49,7 +49,7 @@ namespace Dnn.BookingModule.BookingModule.Components
 
             var ptId = serviceType.Bvin;
 
-            var products = app.CatalogServices.Products.FindAllPaged(1, int.MaxValue).FindAll(p => p.ProductTypeId == ptId);
+            var products = app.CatalogServices.Products.FindAllPaged(1, int.MaxValue).FindAll(p => p.ProductTypeId == ptId).OrderBy(p => p.SitePrice).ToList();
 
             return products;
         }
